@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>당근 농장 10 만들기</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+            display: flex;
+            justify-content: center;
+            background-color: #1e1e1e;
+        }
+
+        .phone-screen {
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
+        }
+
+        .bg-illustration {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .top-area {
+            height: 26%;
+            width: 100%;
+            padding: 18px 14px 0 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-boxes {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .ui-box {
+            background-color: #f7eedc;
+            border: 2.5px solid #6e472b;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 0 #52331d;
+            position: relative;
+        }
+
+        .btn-exit {
+            flex: 0.75;
+            padding: 6px 4px;
+            font-weight: 800;
+            color: #4a2e1b;
+            font-size: 0.88rem;
+            line-height: 1.2;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-exit:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #52331d;
+        }
+
+        .stat-box {
+            flex: 1.25;
+            padding: 12px 5px 5px 5px;
+        }
+
+        .stat-label {
+            position: absolute;
+            top: -11px;
+            background-color: #593822;
+            color: #fff;
+            font-size: 0.76rem;
+            font-weight: bold;
+            padding: 2px 12px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+        .stat-value {
+            font-size: 1.65rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 
+                -1.5px -1.5px 0 #593822,  
+                 1.5px -1.5px 0 #593822,
+                -1.5px  1.5px 0 #593822,
+                 1.5px  1.5px 0 #593822,
+                 0px    2.5px 0 #593822;
+        }
+
+        .field-area {
+            height: 74%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            touch-action: none;
+            padding-bottom: 18px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 40px);
+            grid-template-rows: repeat(10, 44px);
+            column-gap: 10px;
+            row-gap: 7px;
+            place-items: center;
+            justify-content: center;
+            align-content: center;
+        }
+
+        @media (max-height: 720px) {
+            .grid {
+                grid-template-columns: repeat(6, 35px);
+                grid-template-rows: repeat(10, 38px);
+                column-gap: 8px;
+                row-gap: 5px;
+            }
+        }
+
+        .carrot {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 35% 30%, #ff9f38, #e05a00 85%);
+            border-radius: 48% 48% 44% 44%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 900;
+            text-shadow: 0 1.5px 2px rgba(90, 30, 0, 0.75);
+            box-shadow: 
+                inset 0 -3px 5px rgba(120, 35, 0, 0.45),
+                inset 0 2px 3px rgba(255, 220, 170, 0.5),
+                0 3px 3px rgba(0, 0, 0, 0.4);
+            position: relative;
+            transition: transform 0.08s;
+        }
+
+        .carrot::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            width: 16px;
+            height: 7px;
+            background: radial-gradient(circle at 50% 80%, #52b728, #2b7a0b);
+            border-radius: 50% 50% 20% 20%;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.35);
+            z-index: -1;
+        }
+
+        .carrot.selected {
+            background: radial-gradient(circle at 35% 30%, #ffe66d, #ff9500);
+            transform: scale(0.92);
+            box-shadow: 0 0 10px #fff36b, inset 0 0 4px rgba(0,0,0,0.3);
+            z-index: 20;
+        }
+
+        .carrot.cleared {
+            visibility: hidden;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        #selection-box {
+            position: absolute;
+            border: 2.5px dashed #fff;
+            background-color: rgba(255, 255, 255, 0.25);
+            pointer-events: none;
+            display: none;
+            border-radius: 8px;
+            z-index: 100;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(25, 15, 5, 0.88);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 0 20px;
+            z-index: 200;
+        }
+
+        .special-message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #ff9f1c, #ff5400);
+            border: 2px solid #ffe66d;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 900;
+            line-height: 1.4;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+            display: none;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .game-over button {
+            margin-top: 22px;
+            padding: 12px 28px;
+            font-size: 1.1rem;
+            background-color: #ff6b00;
+            color: white;
+            border: 2px solid #fff;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b34700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-screen">
+    <svg class="bg-illustration" viewBox="0 0 420 800" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2b8be6"/>
+                <stop offset="100%" stop-color="#87cefa"/>
+            </linearGradient>
+            <linearGradient id="soilGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#6b3e18"/>
+                <stop offset="20%" stop-color="#7c491e"/>
+                <stop offset="100%" stop-color="#593211"/>
+            </linearGradient>
+            <pattern id="soilTexture" width="40" height="40" patternUnits="userSpaceOnUse">
+                <circle cx="8" cy="10" r="1.5" fill="#47260b" opacity="0.5"/>
+                <circle cx="28" cy="18" r="2" fill="#8f5727" opacity="0.4"/>
+                <circle cx="15" cy="32" r="1.8" fill="#3d2008" opacity="0.5"/>
+                <circle cx="35" cy="35" r="1.2" fill="#9c612e" opacity="0.35"/>
+            </pattern>
+        </defs>
+
+        <rect width="420" height="230" fill="url(#skyGrad)"/>
+
+        <g fill="#ffffff" opacity="0.85">
+            <circle cx="65" cy="65" r="22"/><circle cx="88" cy="60" r="28"/><circle cx="115" cy="68" r="20"/>
+            <circle cx="310" cy="50" r="18"/><circle cx="332" cy="46" r="24"/><circle cx="355" cy="52" r="17"/>
+        </g>
+
+        <path d="M0,175 Q110,135 230,170 T420,160 L420,225 L0,225 Z" fill="#63a8c9" opacity="0.6"/>
+        <path d="M0,192 Q150,175 280,190 T420,185 L420,230 L0,230 Z" fill="#5ab334"/>
+        <path d="M0,205 Q200,195 420,205 L420,235 L0,235 Z" fill="#449622"/>
+
+        <g transform="translate(26, 132)">
+            <rect x="0" y="18" width="22" height="58" fill="#d9dfe3" stroke="#7d8891" stroke-width="1.5"/>
+            <path d="M0,18 A11,11 0 0,1 22,18 Z" fill="#b0bac2" stroke="#7d8891" stroke-width="1.5"/>
+            <polygon points="18,38 48,14 78,38 78,76 18,76" fill="#c9382b" stroke="#6e1912" stroke-width="1.5"/>
+            <polyline points="14,40 48,12 82,40" fill="none" stroke="#f5efe6" stroke-width="3.5" stroke-linecap="round"/>
+            <rect x="36" y="48" width="24" height="28" fill="#a8281d" stroke="#f5efe6" stroke-width="2"/>
+            <line x1="36" y1="48" x2="60" y2="76" stroke="#f5efe6" stroke-width="2"/>
+            <line x1="60" y1="48" x2="36" y2="76" stroke="#f5efe6" stroke-width="2"/>
+            <rect x="43" y="27" width="10" height="10" fill="#f5efe6"/>
+        </g>
+
+        <g transform="translate(345, 168)">
+            <polygon points="5,20 25,6 45,20 45,38 5,38" fill="#d48948" stroke="#6e421b" stroke-width="1.2"/>
+            <polyline points="2,21 25,4 48,21" fill="none" stroke="#8f3629" stroke-width="3"/>
+            <rect x="20" y="24" width="10" height="14" fill="#5c3512"/>
+        </g>
+
+        <g fill="#f2eadc" stroke="#8c7a65" stroke-width="1">
+            <rect x="0" y="198" width="420" height="4"/>
+            <rect x="0" y="210" width="420" height="4"/>
+            <rect x="12" y="192" width="5" height="26" rx="1"/>
+            <rect x="42" y="192" width="5" height="26" rx="1"/>
+            <rect x="115" y="192" width="5" height="26" rx="1"/>
+            <rect x="148" y="192" width="5" height="26" rx="1"/>
+            <rect x="181" y="192" width="5" height="26" rx="1"/>
+            <rect x="214" y="192" width="5" height="26" rx="1"/>
+            <rect x="247" y="192" width="5" height="26" rx="1"/>
+            <rect x="280" y="192" width="5" height="26" rx="1"/>
+            <rect x="313" y="192" width="5" height="26" rx="1"/>
+        </g>
+
+        <rect x="0" y="220" width="420" height="580" fill="url(#soilGrad)"/>
+        <rect x="0" y="220" width="420" height="580" fill="url(#soilTexture)"/>
+        <path d="M0,220 Q20,228 40,220 T80,220 T120,220 T160,220 T200,220 T240,220 T280,220 T320,220 T360,220 T400,220 T420,220 L420,214 L0,214 Z" fill="#3a8c1e"/>
+
+        <g transform="translate(0, 765)">
+            <path d="M0,35 L0,12 Q15,0 28,15 Q42,-2 58,14 Q75,2 90,16 Q110,-4 128,15 Q148,0 165,16 Q185,-3 205,14 Q225,2 245,16 Q265,-2 285,15 Q305,0 325,16 Q345,-3 365,14 Q388,0 405,15 L420,10 L420,35 Z" fill="#3b941d"/>
+            <path d="M0,35 L0,20 Q22,8 45,22 Q70,10 95,23 Q125,8 155,22 Q185,10 215,23 Q245,8 275,22 Q305,10 335,23 Q365,8 395,22 L420,18 L420,35 Z" fill="#52b82c"/>
+            <circle cx="52" cy="18" r="3.5" fill="#ffe600"/>
+            <circle cx="162" cy="20" r="3" fill="#fff799"/>
+            <circle cx="288" cy="17" r="3.5" fill="#ffe600"/>
+            <circle cx="372" cy="21" r="3" fill="#fff799"/>
+        </g>
+    </svg>
+
+    <div class="top-area">
+        <div class="header-boxes">
+            <div class="ui-box btn-exit" onclick="startGame()">
+                ←<br>다시시작
+            </div>
+            <div class="ui-box stat-box">
+                <div class="stat-label">판매수</div>
+                <div class="stat-value" id="score-board">0</div>
+            </div>
+            <div class="ui-box stat-box">
+                <div class="stat-label">남은 시간</div>
+                <div class="stat-value" id="timer">1:00</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="field-area" id="gameContainer">
+        <div class="grid" id="grid"></div>
+        <div id="selection-box"></div>
+    </div>
+
+    <div class="game-over" id="gameOverModal">
+        <h2>수확 종료!</h2>
+        <p id="finalScore" style="font-size: 1.35rem; margin-top: 10px; font-weight: bold;">총 판매수: 0개</p>
+        <div id="specialMessage" class="special-message">
+            와 대단하시군요!!<br>김은지님은 당근 초고수!!
+        </div>
+        <button onclick="startGame()">한 판 더 하기</button>
+    </div>
+</div>
+
+<script>
+    const ROWS = 10;
+    const COLS = 6;
+    const GAME_DURATION = 60; // 1분 (60초)
+    
+    // 숫자 1~9 가중치 확률 (작은 숫자가 더 잘 나오도록 밸런싱)
+    const NUMBER_WEIGHTS = [
+        { num: 1, weight: 16 },
+        { num: 2, weight: 16 },
+        { num: 3, weight: 15 },
+        { num: 4, weight: 14 },
+        { num: 5, weight: 11 },
+        { num: 6, weight: 8 },
+        { num: 7, weight: 7 },
+        { num: 8, weight: 7 },
+        { num: 9, weight: 6 }
+    ];
+
+    let gridData = [];
+    let score = 0;
+    let timeLeft = GAME_DURATION;
+    let timerInterval = null;
+    let isPlaying = false;
+
+    let startX = 0, startY = 0, endX = 0, endY = 0;
+    let isDragging = false;
+
+    const gridElement = document.getElementById('grid');
+    const scoreBoard = document.getElementById('score-board');
+    const timerElement = document.getElementById('timer');
+    const selectionBox = document.getElementById('selection-box');
+    const gameContainer = document.getElementById('gameContainer');
+    const gameOverModal = document.getElementById('gameOverModal');
+    const specialMessage = document.getElementById('specialMessage');
+
+    function getWeightedRandomNumber() {
+        const totalWeight = NUMBER_WEIGHTS.reduce((sum, item) => sum + item.weight, 0);
+        let random = Math.random() * totalWeight;
+        
+        for (let i = 0; i < NUMBER_WEIGHTS.length; i++) {
+            if (random < NUMBER_WEIGHTS[i].weight) {
+                return NUMBER_WEIGHTS[i].num;
+            }
+            random -= NUMBER_WEIGHTS[i].weight;
+        }
+        return 1;
+    }
+
+    function startGame() {
+        gameOverModal.style.display = 'none';
+        specialMessage.style.display = 'none';
+        score = 0;
+        timeLeft = GAME_DURATION;
+        scoreBoard.innerText = score;
+        updateTimerText();
+        
+        initGrid();
+        renderGrid();
+
+        if (timerInterval) clearInterval(timerInterval);
+        isPlaying = true;
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerText();
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }, 1000);
+    }
+
+    function updateTimerText() {
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        timerElement.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function initGrid() {
+        gridData = [];
+        for (let r = 0; r < ROWS; r++) {
+            let row = [];
+            for (let c = 0; c < COLS; c++) {
+                row.push(getWeightedRandomNumber());
+            }
+            gridData.push(row);
+        }
+    }
+
+    function renderGrid() {
+        gridElement.innerHTML = '';
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const carrot = document.createElement('div');
+                carrot.className = `carrot ${gridData[r][c] === 0 ? 'cleared' : ''}`;
+                carrot.dataset.row = r;
+                carrot.dataset.col = c;
+                carrot.innerText = gridData[r][c] !== 0 ? gridData[r][c] : '';
+                gridElement.appendChild(carrot);
+            }
+        }
+    }
+
+    function getClientCoords(e) {
+        if (e.touches && e.touches.length > 0) {
+            return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+    }
+
+    function handleStart(e) {
+        if (!isPlaying) return;
+        isDragging = true;
+        const coords = getClientCoords(e);
+        const rect = gameContainer.getBoundingClientRect();
+        startX = coords.x - rect.left;
+        startY = coords.y - rect.top;
+        
+        selectionBox.style.left = `${startX}px`;
+        selectionBox.style.top = `${startY}px`;
+        selectionBox.style.width = `0px`;
+        selectionBox.style.height = `0px`;
+        selectionBox.style.display = 'block';
+        updateSelection(startX, startY, startX, startY);
+    }
+
+    function handleMove(e) {
+        if (!isDragging || !isPlaying) return;
+        const coords = getClientCoords(e);
+        const rect = gameContainer.getBoundingClientRect();
+        endX = coords.x - rect.left;
+        endY = coords.y - rect.top;
+
+        let left = Math.min(startX, endX);
+        let top = Math.min(startY, endY);
+        let width = Math.abs(endX - startX);
+        let height = Math.abs(endY - startY);
+
+        selectionBox.style.left = `${left}px`;
+        selectionBox.style.top = `${top}px`;
+        selectionBox.style.width = `${width}px`;
+        selectionBox.style.height = `${height}px`;
+
+        updateSelection(left, top, left + width, top + height);
+    }
+
+    function handleEnd() {
+        if (!isDragging || !isPlaying) return;
+        isDragging = false;
+        selectionBox.style.display = 'none';
+        checkAndClearCarrots();
+        clearHighlights();
+    }
+
+    gameContainer.addEventListener('mousedown', handleStart);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+
+    gameContainer.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleStart(e);
+    }, { passive: false });
+    window.addEventListener('touchmove', (e) => {
+        if (isDragging) e.preventDefault();
+        handleMove(e);
+    }, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+
+    function updateSelection(x1, y1, x2, y2) {
+        const carrots = document.querySelectorAll('.carrot');
+        const parentRect = gameContainer.getBoundingClientRect();
+        carrots.forEach(carrot => {
+            const rect = carrot.getBoundingClientRect();
+            const cLeft = rect.left - parentRect.left;
+            const cTop = rect.top - parentRect.top;
+            const cRight = cLeft + rect.width;
+            const cBottom = cTop + rect.height;
+
+            if (cRight >= x1 && cLeft <= x2 && cBottom >= y1 && cTop <= y2) {
+                if (gridData[carrot.dataset.row][carrot.dataset.col] !== 0) {
+                    carrot.classList.add('selected');
+                }
+            } else {
+                carrot.classList.remove('selected');
+            }
+        });
+    }
+
+    function clearHighlights() {
+        document.querySelectorAll('.carrot').forEach(c => c.classList.remove('selected'));
+    }
+
+    function checkAndClearCarrots() {
+        const selectedCarrots = document.querySelectorAll('.carrot.selected');
+        let sum = 0;
+        let coordsList = [];
+
+        selectedCarrots.forEach(carrot => {
+            let r = parseInt(carrot.dataset.row);
+            let c = parseInt(carrot.dataset.col);
+            sum += gridData[r][c];
+            coordsList.push({ r, c });
+        });
+
+        if (sum === 10 && coordsList.length > 0) {
+            coordsList.forEach(pos => {
+                gridData[pos.r][pos.c] = 0;
+            });
+            score += coordsList.length;
+            scoreBoard.innerText = score;
+            renderGrid();
+        }
+    }
+
+    function endGame() {
+        isPlaying = false;
+        clearInterval(timerInterval);
+        document.getElementById('finalScore').innerText = `총 판매수: ${score}개`;
+        
+        if (score >= 40) {
+            specialMessage.style.display = 'block';
+        } else {
+            specialMessage.style.display = 'none';
+        }
+        
+        gameOverModal.style.display = 'flex';
+    }
+
+    window.addEventListener('DOMContentLoaded', startGame);
+</script>
+</body>
+</html>

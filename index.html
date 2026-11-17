@@ -206,6 +206,89 @@
             z-index: 100;
         }
 
+        /* 대기 화면 스타일 */
+        .start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(25, 15, 5, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            z-index: 300;
+            overflow-y: auto;
+        }
+
+        .start-screen h1 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #ff9f1c;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 6px;
+        }
+
+        .start-screen p {
+            font-size: 0.9rem;
+            color: #f7eedc;
+            margin-bottom: 16px;
+        }
+
+        /* 오늘의 기록 10개 목록 창 */
+        .history-box {
+            width: 100%;
+            max-width: 320px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #6e472b;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #ffe66d;
+            margin-bottom: 6px;
+        }
+
+        .history-list {
+            list-style: none;
+            font-size: 0.85rem;
+            color: #ddd;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .btn-main {
+            padding: 12px 32px;
+            font-size: 1.1rem;
+            background-color: #ff6b00;
+            color: white;
+            border: 2px solid #fff;
+            border-radius: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b34700;
+            margin-bottom: 15px;
+        }
+        .btn-main:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b34700;
+        }
+
         .game-over {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -221,13 +304,13 @@
         }
 
         .special-message {
-            margin-top: 16px;
-            padding: 12px 16px;
+            margin-top: 10px;
+            padding: 10px 14px;
             background: linear-gradient(135deg, #ff9f1c, #ff5400);
             border: 2px solid #ffe66d;
             border-radius: 14px;
             color: #fff;
-            font-size: 1.15rem;
+            font-size: 1rem;
             font-weight: 900;
             line-height: 1.4;
             box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
@@ -241,9 +324,9 @@
         }
 
         .game-over button {
-            margin-top: 22px;
-            padding: 12px 28px;
-            font-size: 1.1rem;
+            margin-top: 16px;
+            padding: 10px 24px;
+            font-size: 1rem;
             background-color: #ff6b00;
             color: white;
             border: 2px solid #fff;
@@ -334,8 +417,8 @@
 
     <div class="top-area">
         <div class="header-boxes">
-            <div class="ui-box btn-exit" onclick="startGame()">
-                ←<br>다시시작
+            <div class="ui-box btn-exit" onclick="returnToStart()">
+                🏠<br>메인으로
             </div>
             <div class="ui-box stat-box">
                 <div class="stat-label">판매수</div>
@@ -353,12 +436,28 @@
         <div id="selection-box"></div>
     </div>
 
+    <!-- 대기 화면 (Start Screen) -->
+    <div class="start-screen" id="startScreen">
+        <h1>🥕 당근 농장 10</h1>
+        <p>합이 10이 되는 당근들을 드래그해서<br>제한 시간 1분 동안 최대한 많이 수확하세요!</p>
+        
+        <button class="btn-main" onclick="startGame()">당근 수확 시작하기</button>
+
+        <!-- 오늘 기록 10개 목록 박스 -->
+        <div class="history-box">
+            <div class="history-title">📋 오늘의 도전 기록 (최신 10개)</div>
+            <ul class="history-list" id="historyList">
+                <!-- 자바스크립트로 동적 생성 -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- 게임 종료 화면 -->
     <div class="game-over" id="gameOverModal">
         <h2>수확 종료!</h2>
-        <p id="finalScore" style="font-size: 1.35rem; margin-top: 10px; font-weight: bold;">총 판매수: 0개</p>
-        <div id="specialMessage" class="special-message">
-            와 대단하시군요!!<br>김은지님은 당근 초고수!!
-        </div>
+        <p id="finalScore" style="font-size: 1.25rem; margin-top: 8px; font-weight: bold;">총 판매수: 0개</p>
+        <p id="dailyBestScore" style="font-size: 1rem; margin-top: 4px; color: #ffe66d; font-weight: bold;">오늘의 최고 기록: 0개</p>
+        <div id="specialMessage" class="special-message"></div>
         <button onclick="startGame()">한 판 더 하기</button>
     </div>
 </div>
@@ -368,7 +467,6 @@
     const COLS = 6;
     const GAME_DURATION = 60; // 1분 (60초)
     
-    // 숫자 1~9 가중치 확률 (작은 숫자가 더 잘 나오도록 밸런싱)
     const NUMBER_WEIGHTS = [
         { num: 1, weight: 16 },
         { num: 2, weight: 16 },
@@ -397,6 +495,74 @@
     const gameContainer = document.getElementById('gameContainer');
     const gameOverModal = document.getElementById('gameOverModal');
     const specialMessage = document.getElementById('specialMessage');
+    const dailyBestScoreElement = document.getElementById('dailyBestScore');
+    const startScreen = document.getElementById('startScreen');
+    const historyListElement = document.getElementById('historyList');
+
+    function getTodayString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    // 오늘의 기록 목록 불러오기 (최대 10개, 자정 지나면 리셋)
+    function getStoredHistory() {
+        const today = getTodayString();
+        const savedData = JSON.parse(localStorage.getItem('carrot_daily_history') || '{"date":"","list":[]}');
+        if (savedData.date !== today) {
+            return [];
+        }
+        return savedData.list;
+    }
+
+    // 기록 추가하기 (최신순으로 최대 10개 유지)
+    function addRecord(currentScore) {
+        const today = getTodayString();
+        let list = getStoredHistory();
+
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        // 새 기록 추가 (가장 위로)
+        list.unshift({ time: timeStr, score: currentScore });
+
+        // 최대 10개까지만 유지
+        if (list.length > 10) {
+            list = list.slice(0, 10);
+        }
+
+        localStorage.setItem('carrot_daily_history', JSON.stringify({ date: today, list: list }));
+        return list;
+    }
+
+    // 대기 화면에 기록 10개 렌더링하기
+    function renderHistoryUI() {
+        const list = getStoredHistory();
+        historyListElement.innerHTML = '';
+
+        if (list.length === 0) {
+            const li = document.createElement('li');
+            li.style.textAlign = 'center';
+            li.style.color = '#aaa';
+            li.style.padding = '8px 0';
+            li.innerText = '오늘 아직 도전 기록이 없습니다!';
+            historyListElement.appendChild(li);
+            return;
+        }
+
+        list.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `<span>${index + 1}회차 (${item.time})</span> <strong>${item.score}개</strong>`;
+            historyListElement.appendChild(li);
+        });
+    }
+
+    // 오늘의 최고 기록 계산
+    function getTodayBest() {
+        const list = getStoredHistory();
+        if (list.length === 0) return 0;
+        return Math.max(...list.map(item => item.score));
+    }
 
     function getWeightedRandomNumber() {
         const totalWeight = NUMBER_WEIGHTS.reduce((sum, item) => sum + item.weight, 0);
@@ -411,7 +577,16 @@
         return 1;
     }
 
+    function returnToStart() {
+        if (timerInterval) clearInterval(timerInterval);
+        isPlaying = false;
+        gameOverModal.style.display = 'none';
+        renderHistoryUI();
+        startScreen.style.display = 'flex';
+    }
+
     function startGame() {
+        startScreen.style.display = 'none';
         gameOverModal.style.display = 'none';
         specialMessage.style.display = 'none';
         score = 0;
@@ -578,18 +753,35 @@
     function endGame() {
         isPlaying = false;
         clearInterval(timerInterval);
-        document.getElementById('finalScore').innerText = `총 판매수: ${score}개`;
         
-        if (score >= 40) {
-            specialMessage.style.display = 'block';
+        // 기록 저장 및 최신 10개 목록 갱신
+        addRecord(score);
+        const dailyBest = getTodayBest();
+
+        document.getElementById('finalScore').innerText = `총 판매수: ${score}개`;
+        dailyBestScoreElement.innerText = `오늘의 최고 기록: ${dailyBest}개`;
+        
+        let message = "";
+        if (score < 30) {
+            message = "허접이시네요!!<br>좀 더 분발하세요.";
+        } else if (score < 40) {
+            message = "아쉬워요.혹시 님은 허접??<br>조금 더 노력해보세요.";
+        } else if (score < 50) {
+            message = "아.. 큼.. 흠..<br>아쉬운데...";
         } else {
-            specialMessage.style.display = 'none';
+            message = "김은지님은 당근의 왕!!!<br>참 잘했어요!!";
         }
+        
+        specialMessage.innerHTML = message;
+        specialMessage.style.display = 'block';
         
         gameOverModal.style.display = 'flex';
     }
 
-    window.addEventListener('DOMContentLoaded', startGame);
+    // 최초 접속 시 대기화면의 기록 목록 렌더링
+    window.addEventListener('DOMContentLoaded', () => {
+        renderHistoryUI();
+    });
 </script>
 </body>
 </html>
